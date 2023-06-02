@@ -1,0 +1,46 @@
+[{
+  "_id": {
+    "$oid": "631b633d42abc21558b8505b"
+  },
+  "username": "mikeyik",
+  "firstname": "Mike",
+  "lastname": "Ike",
+  "email": "mike@you.net",
+  "passwordhash": "d8d992cf0016e35c2a8339d5e7d44bebd12a2d77",
+  "roles": [
+    {
+      "$oid": "630656a4417efc1088e23897"
+    }
+  ],
+  "__v": 1
+},{
+  "_id": {
+    "$oid": "631b6469b62755c95fbada70"
+  },
+  "username": "mikeyike",
+  "firstname": "Mike",
+  "lastname": "Ike",
+  "email": "mike@you.net",
+  "passwordhash": "c983a782b95248bfc438f77d17a4c4e8de38813a",
+  "roles": [
+    {
+      "$oid": "630656a4417efc1088e23897"
+    }
+  ],
+  "__v": 1
+},{
+  "_id": {
+    "$oid": "6322268a156d1b0b0b7757c5"
+  },
+  "username": "roger",
+  "firstname": "roger",
+  "lastname": "snowden",
+  "email": "roger@me.com",
+  "passwordhash": "2d7a34c9ef8efa2cfdf4b89175f7edec1cd0ddda",
+  "roles": [
+    {
+      "$oid": "630656a4417efc1088e23897"
+    }
+  ],
+  "__v": 1
+}]

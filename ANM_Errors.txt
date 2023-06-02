@@ -1,0 +1,12 @@
+ANM
+
+HTTP errors:
+
+http error text values, for 401/402
+validateSession-
+"Valid Session"
+"Sesssion Not Found"
+"Session Timeout"
+"Session Expired"
+"Invalid Password"
+

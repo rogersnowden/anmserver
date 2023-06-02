@@ -1,0 +1,15 @@
+[{
+  "_id": {
+    "$oid": "639dffc94d8c275738f7465a"
+  },
+  "username": "roger",
+  "__v": 0,
+  "email": "roger@me.com",
+  "firstname": "roger",
+  "lastname": "dddddd",
+  "touchtime": {
+    "$date": {
+      "$numberLong": "1680967576330"
+    }
+  }
+}]

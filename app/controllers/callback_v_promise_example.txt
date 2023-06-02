@@ -1,0 +1,69 @@
+callback
+
+exports.getProfile = (req, res, callback) => {
+  logger.debug("getprofile req params: " + req.body.userName);
+  Profile.findOne({ username: req.body.userName }, function (err, profile) {
+    logger.debug("getProfile params: " + req.body.userName);
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, profile);
+    }
+  });
+};
+
+
+promise:
+
+exports.getProfile = (req, res) => {
+  logger.debug("getprofile req params: " + req.body.userName);
+  return Profile.findOne({ username: req.body.userName })
+    .then((profile) => {
+      logger.debug("getProfile params: " + req.body.userName);
+      return profile;
+    })
+    .catch((error) => {
+      throw error;
+    });
+};
+
+
+Mixed example, but works:
+exports.saveProfile = (req, res, callback) => {
+	logger.debug("controller saveProfile: " + JSON.stringify(req.body));
+	const update = {
+		firstname: req.body.firstname,
+		lastname: req.body.lastname,
+		email: req.body.email,
+		touchtime: Math.floor(Date.now()),
+		};
+	logger.debug('update stuff: ' + update);
+	// update the update obj fields, new:true forces update. Do it now.
+	Profile.findOneAndUpdate( {username: req.body.userName}, update, { new: true }
+		)
+    .then((updatedDocument) => {
+      if (!updatedDocument) {
+		  const error = new Error('Document not found');
+		  error.status = 404;
+		  logger.debug("update profile, doc not found");
+        throw error;
+      }
+	  // update cool, return via callback
+	  logger.debug("saveProfile cool, returning now");
+      callback(null, updatedDocument);
+    })
+    .catch((error) => {
+      // Handle any errors
+	  logger.debug('update error: ' + error);
+	  callback(error);    
+	});
+};
+
+Let me explain how it works:
+
+The findOneAndUpdate function returns a Promise.
+The then block is executed when the Promise resolves successfully. In this case, it checks if the document was found and updated, then calls the callback function with null (indicating no error) and the updatedDocument.
+The catch block is executed when the Promise is rejected, i.e., when an error occurs. In this case, it calls the callback function with the error.
+So, although this code mixes callbacks and promises, it works because the callback function is called only when the Promise is either resolved or rejected. This is a valid way to use both in conjunction.
+
+However, it's usually recommended to stick to either callbacks or Promises for consistency and easier code maintenance. If you'd like to switch to Promises, you can refactor the code to return a Promise and handle the result in the route. If you prefer callbacks, you can use the findOneAndUpdate method with a callback instead of a Promise.
