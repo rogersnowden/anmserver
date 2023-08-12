@@ -87,7 +87,7 @@ app.post('/api/register', (req, res) => {
     })
     .catch(err => {
       if (err.message === "Username already exists") {
-        res.status(400).json({ message: "Username already exists. Please choose a different username." });
+        res.status(409).json({ message: "Username already exists. Please choose a different username." });
       } else {
         res.status(500).json({ message: err.message });
       }

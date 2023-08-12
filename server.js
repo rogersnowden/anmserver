@@ -1,4 +1,7 @@
 // server.js rsnowden
+const https = require('https');
+console.log('protocol: ' + https.globalAgent.protocol);
+
 const express = require("express");
 const cors = require("cors");
 
@@ -12,6 +15,25 @@ const app = express();
 
 // debugging to disk if needed
 const fs = require('fs');
+
+// set port, listen for requests
+const PORT = process.env.PORT || 4000;
+
+const options = {
+  key: fs.readFileSync('C:/Users/roger/SSL/server.key'),
+  cert: fs.readFileSync('C:/Users/roger/SSL/server.crt')
+};
+
+//console.log('server.key: ' + options.key);
+//console.log('server.crt: ' + options.cert);
+
+console.log('PORT: ' + PORT);
+
+//console.log('options: ' + options.key + ' ' + options.cert);
+
+https.createServer(options, app).listen(PORT, () => {
+	console.log('Server running, port: ' +  PORT + ' using HTTPS.');
+});
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1); // trust first proxy
@@ -27,11 +49,12 @@ const dotenv = require('dotenv');
 dotenv.config();
 process.env.TOKEN_SECRET;
 
-logger.debug('server token_secret: ' + process.env.TOKEN_SECRET);
+//logger.debug('server token_secret: ' + process.env.TOKEN_SECRET);
 
 var jwt = require('jsonwebtoken');
 var corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://localhost:3000",
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -84,12 +107,6 @@ app.post("/", (req, res) => {
 require("./app/routes/routes")(app);
 
 logger.debug("routes loaded");
-
-// set port, listen for requests
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
 
 // runs from db.mongoose def, above
 function initial() {

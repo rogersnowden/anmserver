@@ -164,7 +164,7 @@ exports.register = (req, res) => {
         resolve({ message: "User registered successfully" });
       })
       .catch((error) => {
-        logger.debug("reg err");
+        logger.debug("reg err" + error);
         reject(error);
       });
   });
