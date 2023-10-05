@@ -127,6 +127,36 @@ app.post('/api/saveprofile', (req, res) => {
     });
 });
 
+app.post('/api/pwdreset', (req, res) =>{
+// get passed username (email addr)
+// lookup in user doc/table
+// if found, create link to change pwd api
+		//set token in user doc
+// 		email link to user
+//		if link is called via http, compare username/token passed to saved token
+//		if good, present password entry form
+//		if link *not* good, disregard and end
+//
+
+	logger.debug("pwdreset start");
+	controller.pwdreset(req, res);
+	logger.debug("pwdreset end");
+	});
+
+app.post("/api/pwdset", (req, res) => {
+  logger.debug("routes pwdset ");
+  controller.pwdset(req, res)
+    .then(data => {
+      res.status(200).json(data);
+    })
+    .catch(err => {
+      res.status(500).json({ message: err.message });
+    });
+});
+
+
+
+
 // errorHandler for all cases, function errorHandler defined above
 app.use(errorHandler);
 };

@@ -27,6 +27,11 @@ module.exports = function(app) {
 	controller.login
   );
   
+  app.post(
+	"/api/auth/pwdrecover",
+	controller.pwdrecover
+	);
+  
   app.getprofile(
   logger.debug("clear ");
   logger.debug("");

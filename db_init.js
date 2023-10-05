@@ -34,14 +34,12 @@ const sessionSchema = new mongoose.Schema({
 	touchtime: Date,
 });
 
-// Create the model for the collection
-//const Session = mongoose.model('Session', sessionSchema);
+// Define the Reset schema
+const resetSchema = new mongoose.Schema({
+    token: { type: String, index: { unique: true } },
+    username: { type: String },
+    created: Date,
+});
 
-//// Create a unique index on the username field
-//Session.collection.createIndex({ username: 1 }, { unique: true }, (err) => {
-// if (err) {
-//    console.error('Error creating index:', err);
-//  } else {
-//    console.log('Index created successfully.');
-//  }
-//});
+// Create the model, if it doesn't exist
+const Reset = mongoose.model('Reset', resetSchema);

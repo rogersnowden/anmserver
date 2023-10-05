@@ -9,6 +9,7 @@ db.user = require("./user.model");
 db.session = require("./session.model");
 db.role = require("./role.model");
 db.profile = require("./profile.model");
+db.reset = require("./reset.model");
 
 db.ROLES = ["user", "admin", "moderator"];
 

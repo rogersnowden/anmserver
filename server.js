@@ -68,6 +68,7 @@ app.use(express.urlencoded({ extended: true }));
 const db = require("./app/models");
 const Role = db.role;
 const Session = db.session;
+const Reset = db.reset;
 
 // set strictQuery is false by default, you get a warning. Deprecation thing, deal with it soon
 db.mongoose.set("strictQuery", true);

@@ -5,6 +5,9 @@ const User = db.user;
 const Role = db.role;
 const Session = db.session;
 const Profile = db.profile;
+const Reset = db.reset;
+
+
 
 const crypto = require('crypto');
 const dotenv = require('dotenv');
@@ -12,6 +15,9 @@ dotenv.config();
 
 var logger = require('log4js').getLogger("auth.controller")
 logger.debug("in auth.controller");
+
+logger.debug("db thing: " + db);
+
 
 var jwt = require('jsonwebtoken');
 
@@ -182,10 +188,10 @@ function createProfile(uname) {
 		if (!profile) {
 			logger.debug("profile NOT FOUND: " + uname);
 			var thisProfile = new Profile({username: uname, Doo: "dudly" });
-    		thisProfile.save(function (err, prof) {
-      			if (err) return console.error(err);
-      				logger.debug(prof.username + " saved to profile collection.");
-    		});
+		    thisProfile.save(function (err, prof) {
+      			if (err) return console.error(err);
+      				logger.debug(prof.username + " saved to profile collection.");
+    					});
 		} else {
 			logger.debug("profile for " + profile.username + " FOUND");
 		}
@@ -242,6 +248,22 @@ function authenticateUser(username, password) {
     });
 }
 
+function lookupUser(username) {
+  return User.findOne({ username: username })
+    .exec()
+    .then(user => {
+      if (!user) {
+        logger.debug("username not found: " + username);
+        throw new Error("Username Not Found");
+      } else {
+        return user;
+      }
+    })
+    .catch(error => {
+      console.error('Error finding:', error);
+      throw error;
+    });
+}
 
 function createSession(user) {
   return Session.deleteOne({ username: user.username })
@@ -309,6 +331,68 @@ exports.logout = (req, res, callback) => {
   });
 };
 
+// create hashed value to use as reset token
+function generateRandomToken() {
+	let token= crypto.randomBytes(32).toString('hex');
+	logger.debug("gen token: " + token);
+	return token;
+};
+
+exports.pwdreset = (req, res) => {
+  // tidy up strings
+  req.body.username = req.body.username.trim();
+	// create reset timestamp, add to user doc, gen reset link to api
+	let resetTime= Math.floor(Date.now());
+	let token = generateRandomToken();
+    User.findOneAndUpdate(
+      { username: req.body.username },
+      {
+		token: token,
+        username: req.body.username,
+        created: resetTime
+      }
+    )
+	.then(() => {
+		var link = getLink(token);
+		return res.status(200).json({message: "Reset link sent"});
+	})
+    .catch(error => {
+      console.error('Error pwd reset:', error);
+      return res.status(500).json({error: "Error in password reset"});
+    });
+};
+
+exports.pwdset = (req, res) => {
+  return new Promise((resolve, reject) => {
+    Reset.findOne({ token: req.body.token })
+      .then(resetDoc => {
+        if (!resetDoc) {
+          logger.debug("token not found: " + resetDoc.token);
+          reject(new Error("Reset Token Not Found"));
+        } else {
+          logger.debug("reset token found okay");
+          resolve({ message: "Reset token found", user: "Replace this with actual user data" });
+        }
+      })
+      .catch(error => {
+        console.error('Error authenticating reset token:', error);
+        reject(error);
+      });
+  });
+};
+
+
+function getLink(username, resetTime) {
+	logger.debug("in getlink");
+	var urlBase= "https://localhost:3000";
+	var thisLink= urlBase + "/pwdset/" + username;
+	console.log("new link: " + thisLink);
+	return (thisLink);
+};
+
+function sendLink(username, resetTime) {
+	console.log("link sent: " + username + " " + resetTime);
+};
 
 exports.getProfile = (req, res) => {
   logger.debug("getprofile req params: " + req.body.userName);
