@@ -21,7 +21,22 @@ logger.debug("db thing: " + db);
 
 var jwt = require('jsonwebtoken');
 
-var sha1 = require('node-sha1');
+//var sha1 = require('node-sha1');
+const bcrypt = require('bcrypt');
+
+const saltRounds = 10; // Increase for more security. 10 is a reasonable default.
+
+function hashPassword(plainPassword) {
+    return new Promise((resolve, reject) => {
+        bcrypt.hash(plainPassword, saltRounds, (err, hashed) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(hashed);
+            }
+        });
+    });
+}
 
 function genAccessToken(ID) {
 	logger.debug(" gen access token ID :" + ID);
@@ -33,11 +48,12 @@ function genAccessToken(ID) {
 }
 
 function genSessionID(username) {
-	let ID = crypto.createHash('sha1', username )
-		  .update('How are you?')
-          .digest('hex');
-	return ID;
-};
+    const currentTimestamp = Date.now().toString();
+    let ID = crypto.createHash('sha256')
+                   .update(username + currentTimestamp + 'TheRainInSpainIsWet')
+                   .digest('hex');
+    return ID;
+}
 
 exports.findToken = (req, res, next) => {
 	logger.debug("controller findToken");
@@ -123,34 +139,34 @@ exports.saveProfile = (req, res) => {
     });
 };
 
-
 exports.register = (req, res) => {
   logger.debug("*** exports.register " + Date());
-  logger.debug("auth ctlr register, pwd: " + req.body.username + " " + req.body.password);
-  // Rest of the code
+  logger.debug("auth ctlr register, user: " + req.body.username);
 
   return new Promise((resolve, reject) => {
     User.findOne({ username: req.body.username })
       .then(existingUser => {
-        logger.debug("reg exist user?");
         if (existingUser) {
           // If user with the same username already exists, reject with a specific error message
           throw new Error("Username already exists");
         }
 
-        // Create a new user and save it
+        // Hash the password
+        return bcrypt.hash(req.body.password, saltRounds);
+      })
+      .then(hashedPassword => {
+        // Create a new user with the hashed password
         const user = new User({
           username: req.body.username,
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           email: req.body.email,
-          passwordhash: req.body.password,
+          passwordhash: hashedPassword,
         });
 
         return user.save();
       })
       .then(user => {
-        logger.debug("reg saved user");
         if (req.body.roles) {
           return Role.find({ name: { $in: req.body.roles } }).exec()
             .then(roles => {
@@ -170,12 +186,11 @@ exports.register = (req, res) => {
         resolve({ message: "User registered successfully" });
       })
       .catch((error) => {
-        logger.debug("reg err" + error);
+        logger.debug("reg err " + error);
         reject(error);
       });
   });
 };
-
 
 
 // Given a username, create a profile. Also, on login, create if none exists
@@ -220,7 +235,6 @@ exports.login = (req, res) => {
     });
 };
 
-
 function authenticateUser(username, password) {
   return User.findOne({ username: username })
     .populate("roles", "-__v")
@@ -231,19 +245,20 @@ function authenticateUser(username, password) {
         throw new Error("Username Not Found");
       }
 
-      var passwordOffered = crypto.createHash('sha1').update(password).digest('hex');
-      var passwordIsValid = (passwordOffered == user.passwordhash);
+      // Compare the password using bcrypt
+      return bcrypt.compare(password, user.passwordhash)
+        .then(passwordIsValid => {
+          if (!passwordIsValid) {
+            logger.debug("password bad: " + password);
+            throw new Error("Invalid Password");
+          }
 
-      if (!passwordIsValid) {
-        logger.debug("password bad: " + password);
-        throw new Error("Invalid Password");
-      }
-
-      logger.debug("username auth fell through okay");
-      return user;
+          logger.debug("username auth fell through okay");
+          return user;
+        });
     })
     .catch(error => {
-      console.error('Error authenticating user:', error);
+      logger.debug('Error authenticating user:', error);
       throw error;
     });
 }
@@ -338,28 +353,46 @@ function generateRandomToken() {
 	return token;
 };
 
+// Assuming User is your user model and it has a method or static to find by username...
+
 exports.pwdreset = (req, res) => {
-  // tidy up strings
-  req.body.username = req.body.username.trim();
-	// create reset timestamp, add to user doc, gen reset link to api
-	let resetTime= Math.floor(Date.now());
-	let token = generateRandomToken();
-    User.findOneAndUpdate(
-      { username: req.body.username },
-      {
-		token: token,
-        username: req.body.username,
-        created: resetTime
-      }
-    )
-	.then(() => {
-		var link = getLink(token);
-		return res.status(200).json({message: "Reset link sent"});
-	})
-    .catch(error => {
-      console.error('Error pwd reset:', error);
-      return res.status(500).json({error: "Error in password reset"});
-    });
+  return new Promise((resolve, reject) => {
+    // tidy up strings
+    let username = req.body.username.trim();
+	// preemptively get token so value is in scope throughout
+    var token = generateRandomToken();
+
+    // Check if username exists in the database
+    User.findOne({ username: username })
+      .then(user => {
+        if (!user) {
+          // No user found with this username
+		  logger.debug("control reset find user err: " + username);
+          reject(new Error("Username not found"));
+          return;  // Return to prevent the rest of the code from executing
+        }
+
+        // create reset timestamp, add to user doc, gen reset link to api
+        let resetTime = Math.floor(Date.now());
+    
+        var thisReset = new Reset({
+          token: token, 
+          username: username,
+          created: resetTime
+        });
+		logger.debug("created reset obj: " + resetTime);
+        return thisReset.save();  // Chain the promise to be caught by the outer .then() or .catch()
+      })
+      .then(() => {
+        var link = getLink(token);
+		logger.debug("reset do happy");
+        resolve({message: "Reset link sent"});
+      })
+      .catch(error => {
+        logger.debug('Error pwd reset:', error);
+        reject(new Error("Error in password reset"));
+      });
+  });
 };
 
 exports.pwdset = (req, res) => {
@@ -367,12 +400,27 @@ exports.pwdset = (req, res) => {
     Reset.findOne({ token: req.body.token })
       .then(resetDoc => {
         if (!resetDoc) {
-          logger.debug("token not found: " + resetDoc.token);
-          reject(new Error("Reset Token Not Found"));
-        } else {
-          logger.debug("reset token found okay");
-          resolve({ message: "Reset token found", user: "Replace this with actual user data" });
+          logger.debug("token not found: " + req.body.token); // Note: Change from resetDoc.token to req.body.token because resetDoc would be null here
+          return reject(new Error("Reset Token Not Found"));
         }
+        
+        // If reset token found, retrieve the associated user
+        return User.findOne({ username: req.body.username });
+      })
+      .then(user => {
+        if (!user) {
+          logger.debug("User not found for username: " + req.body.username);
+          return reject(new Error("User not found"));
+        }
+
+        // Update the password and save
+		var newPassword = req.body.newPassword;
+		var hashedPassword = crypto.createHash('sha1').update(newPassword).digest('hex');
+		user.password = hashedPassword;        return user.save();
+      })
+      .then(() => {
+        logger.debug("Password updated successfully");
+        resolve({ message: "Password updated successfully" });
       })
       .catch(error => {
         console.error('Error authenticating reset token:', error);
@@ -380,6 +428,7 @@ exports.pwdset = (req, res) => {
       });
   });
 };
+
 
 
 function getLink(username, resetTime) {
