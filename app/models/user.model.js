@@ -8,12 +8,7 @@ const User = mongoose.model(
 	lastname: String,
     email: String,
     passwordhash: String,
-    roles: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Role"
-      }
-    ],
+    roles: [String],
   })
 );
 

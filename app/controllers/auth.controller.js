@@ -147,43 +147,33 @@ exports.register = (req, res) => {
     User.findOne({ username: req.body.username })
       .then(existingUser => {
         if (existingUser) {
-          // If user with the same username already exists, reject with a specific error message
           throw new Error("Username already exists");
         }
-
-        // Hash the password
         return bcrypt.hash(req.body.password, saltRounds);
       })
       .then(hashedPassword => {
-        // Create a new user with the hashed password
         const user = new User({
           username: req.body.username,
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           email: req.body.email,
           passwordhash: hashedPassword,
+          roles: ["user"],
         });
 
         return user.save();
       })
       .then(user => {
-        if (req.body.roles) {
-          return Role.find({ name: { $in: req.body.roles } }).exec()
-            .then(roles => {
-              user.roles = roles.map(role => role._id);
-              return user.save();
-            });
-        } else {
-          return Role.findOne({ name: "user" }).exec()
-            .then(role => {
-              user.roles = [role._id];
-              return user.save();
-            });
-        }
-      })
-      .then(() => {
         logger.debug("reg okay");
-        resolve({ message: "User registered successfully" });
+        // Extract relevant user details
+        const userDetails = {
+          username: user.username,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          email: user.email,
+          roles: user.roles
+        };
+        resolve({ message: "User registered successfully", user: userDetails });
       })
       .catch((error) => {
         logger.debug("reg err " + error);
@@ -191,7 +181,6 @@ exports.register = (req, res) => {
       });
   });
 };
-
 
 // Given a username, create a profile. Also, on login, create if none exists
 function createProfile(uname) {
@@ -219,19 +208,19 @@ exports.login = (req, res) => {
   req.body.password = req.body.password.trim();
 
   return authenticateUser(req.body.username, req.body.password)
-    .then(user => {
-      return createSession(user)
-        .then(session => {
+    .then(user => {  // destruction session and user
+		return createSession(user)
+        .then(({session, user}) => {
           if (session) {
-            return session;
+            sendSuccessResponse(session.authtoken, user, res);
           } else {
-            throw new Error('Not logging in');
+            throw new Error('Not logged in');
           }
         });
     })
     .catch(error => {
       console.error('Error in login:', error);
-      throw error;
+      res.status(500).json({message: error.message});
     });
 };
 
@@ -296,7 +285,7 @@ function createSession(user) {
       });
 
       return session.save().then(session => {
-        return session;
+        return { session, user }; // return both session and user
       })
       .catch(error => {
         console.error('Error creating session:', error);
@@ -318,21 +307,19 @@ function sendErrorResponse(err, res, callback) {
   }
 }
 
-function sendSuccessResponse(accessToken, user, res, callback) {
-  var roles = [];
-  for (let i = 0; i < user.roles.length; i++) {
-    roles.push("ROLE_" + user.roles[i].name.toUpperCase());
-  }
-  
+function sendSuccessResponse(accessToken, user, res) {
+  var response = {
+    id: user._id,
+    username: user.username,
+	firstname: user.firstname,
+	email: user.email,
+    roles: user.roles,
+    accessToken: accessToken,
+  };
+
   res.setHeader('accessToken', accessToken);
   logger.debug("Set accessToken header: " + accessToken);
-  
-  var response = {
-    accessToken: accessToken,
-    roles: roles,
-  };
-  
-  return callback(null, response);
+  res.status(200).json(response); // response
 }
 
 // logout current session. If not found, no big deal. Return success anyway.

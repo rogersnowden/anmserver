@@ -1,0 +1,23 @@
+nodejs start params:
+
+To enable trace output in Node.js, you can use the --trace-warnings flag. This flag will print stack traces for warnings, including unhandled promise rejections. When combined with --inspect, it can be quite useful for debugging.
+
+So, if you're starting your Node.js application with debugging and you want to enable trace output, you would use:
+
+node --inspect --trace-warnings server.js
+
+This command will start your Node.js application (server.js in this case) with the debugger enabled and will also print detailed trace information for warnings.
+
+Additionally, there are other flags that might be useful depending on your debugging needs:
+
+    --trace-deprecation: Print stack traces for deprecations.
+    --trace-sync-io: Print stack trace when synchronous I/O is detected after the first turn of the event loop.
+    --trace-events-enabled: Enable trace events.
+    --trace-exit: Print a stack trace on exit.
+
+You can combine these flags as needed for more detailed debugging information. For example:
+
+node --inspect --trace-warnings --trace-deprecation server.js
+
+This command will enable the debugger, print stack traces for warnings and deprecations. Remember that excessive tracing and logging can impact performance, so it's best to use these flags during development or troubleshooting.
+

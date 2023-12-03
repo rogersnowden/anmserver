@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
 const dbConfig = require("./app/config/db.config");
-	console.log("dbConfig: ");
-	console.log(dbConfig.HOST);
-	console.log(dbConfig.PORT);
-	console.log(dbConfig.DB);
+console.log("dbConfig: ");
+console.log(dbConfig.HOST);
+console.log(dbConfig.PORT);
+console.log(dbConfig.DB);
 
 const db = require("./app/models");
+const Role = require('./app/models/role.model');  // Import the Role model
 const Session = db.session;
 
 db.mongoose
@@ -15,31 +16,43 @@ db.mongoose
     useUnifiedTopology: true
   })
   .then(() => {
-    console.log("Successfully connect to MongoDB.");
-//    initial();
-//	logger.debug('past mongoose initial');
+    console.log("Successfully connected to MongoDB.");
+    dropAndInitializeRoles();  // Call the function to drop and initialize roles
   })
   .catch(err => {
     console.error("Connection error", err);
     process.exit();
   });
 
+// Function to drop and initialize roles
+function dropAndInitializeRoles() {
+  mongoose.connection.db.dropCollection('roles')
+    .then(() => {
+      console.log("Role collection dropped successfully");
+      return initializeRoles();
+    })
+    .catch(err => {
+      if (err.code === 26) {
+        console.log("Role collection does not exist. Initializing new roles...");
+        return initializeRoles();
+      } else {
+        throw err;
+      }
+    });
+}
 
-// Define the schema for the collection
-const sessionSchema = new mongoose.Schema({
-    sessionid: { type: String, required: true},
-	authtoken: String,
-	username: {type: String, required: true, unique: true},
-	created: Date,
-	touchtime: Date,
-});
+// Function to initialize roles
+function initializeRoles() {
+  const roles = ['user', 'admin', 'super'];
+  const rolePromises = roles.map(roleName => new Role({ name: roleName }).save());
+  
+  return Promise.all(rolePromises)
+    .then(() => {
+      console.log("Roles initialized successfully");
+    })
+    .catch(err => {
+      console.error("Error initializing roles:", err);
+    });
+}
 
-// Define the Reset schema
-const resetSchema = new mongoose.Schema({
-    token: { type: String, index: { unique: true } },
-    username: { type: String },
-    created: Date,
-});
-
-// Create the model, if it doesn't exist
-const Reset = mongoose.model('Reset', resetSchema);
+// Define other schemas and models here as needed...
