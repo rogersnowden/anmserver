@@ -157,6 +157,8 @@ exports.register = (req, res) => {
           firstname: req.body.firstname,
           lastname: req.body.lastname,
           email: req.body.email,
+		  isverified: "",
+		  ownsproduct: "",
           passwordhash: hashedPassword,
           roles: ["user"],
         });
@@ -171,6 +173,8 @@ exports.register = (req, res) => {
           firstname: user.firstname,
           lastname: user.lastname,
           email: user.email,
+		  isverified: user.isverfied,
+		  ownsproduct: user.ownsproduct,
           roles: user.roles
         };
         resolve({ message: "User registered successfully", user: userDetails });
@@ -313,6 +317,8 @@ function sendSuccessResponse(accessToken, user, res) {
     username: user.username,
 	firstname: user.firstname,
 	email: user.email,
+	isverfied: user.isverified,
+	ownsproduct: user.ownsproduct,
     roles: user.roles,
     accessToken: accessToken,
   };
