@@ -1,0 +1,38 @@
+The error you're encountering, "Uncaught TypeError: Object(...)(...) is undefined", suggests there's an issue with how you're trying to use the useContext hook to access the AuthContext. The problem likely lies in the destructuring of setLibraryItems from AuthContext, as it doesn't appear to be provided in the context value.
+
+Based on your AuthContext code, you're providing these values: isLoggedIn, setIsLoggedIn, userName, setUserName, firstName, setFirstName, isVerified, setIsVerified, ownsProduct, and setOwnsProduct. However, setLibraryItems is not among them.
+
+If setLibraryItems is a function you want to use to update the library items state, you need to include it in your context provider. Alternatively, if setLibraryItems is meant to be a local state update function for App.js, it should be defined with useState in App.js, not pulled from AuthContext.
+
+To fix this issue, you need to decide where setLibraryItems should be defined. Here are two approaches:
+Approach 1: Define setLibraryItems in App.js:
+
+If setLibraryItems is specific to App.js, define it with useState:
+export default function App() {
+  const { isLoggedIn, userName } = useContext(AuthContext);
+  const [libraryItems, setLibraryItems] = useState([]);
+  const [message, setMessage] = useState('');
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+
+  // ... rest of your code
+}
+
+Approach 2: Include setLibraryItems in AuthContext:
+
+If setLibraryItems should be globally available, include it in AuthProvider:
+const AuthProvider = ({ children }) => {
+  // ... other state declarations
+  const [libraryItems, setLibraryItems] = useState([]);
+
+  return (
+    <AuthContext.Provider value={{ 
+      // ... other context values,
+      libraryItems, setLibraryItems
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+Then you can destructure setLibraryItems from AuthContext in App.js.
+
+Choose the approach that best fits your application's architecture. If libraryItems is a state that should be accessible across multiple components, including it in the AuthContext makes sense. If it's specific to App.js or a subset of components, defining it locally in App.js is more appropriate.

@@ -1,0 +1,47 @@
+The issue you're encountering seems to be related to a few structural and logical aspects of your React application. Let's go through them:
+1. Unreachable Code Error:
+
+The 'unreachable code after return statement' errors in prod.service and auth.service indicate that there might be some code after a return statement in these service files. In JavaScript, any code placed after a return statement in a function will not be executed, hence the error. You should review these service files to ensure that there is no code after the return statements.
+2. LibraryLoader and AnmHome in App.js:
+
+Your current App.js setup seems to be using both LibraryLoader and AnmHome in a way that might be causing some confusion. Let's clarify the intended use:
+
+    LibraryLoader should be responsible for loading the library items based on the isLoggedIn state and then rendering its children with these items.
+    AnmHome should receive libraryItems as props and use them accordingly.
+
+The structure in your App.js seems correct, but ensure that LibraryLoader is implemented as per the previous instructions. Also, make sure that AnmHome correctly handles the libraryItems props.
+3. Context in App.js:
+
+You are using useContext(AuthContext) directly in App.js, which is wrapped inside AuthProvider. This should be fine as long as the useContext hook is used within a component that is a child of AuthProvider. If App.js is the component where AuthProvider is defined, you cannot use useContext(AuthContext) directly in App.js. Instead, this logic should be in a child component.
+4. Conditional Rendering Based on isLoggedIn:
+
+If you need to conditionally render components based on whether the user is logged in, you can use a conditional statement in your JSX. For example:
+
+return (
+  <ThemeProvider theme={theme}>
+    <div className="App">
+      <AuthProvider>
+        <Router>
+          <MenuAppBar className={classes.appBar} title={'ANM Main'} />
+          <Routes>
+            <Route path="/pwdset/:token" element={<PwdSet />} />
+            {/* Other routes */}
+          </Routes>
+        </Router>
+        {isLoggedIn && (
+          <LibraryLoader>
+            {({ libraryItems }) => <AnmHome libraryItems={libraryItems} />}
+          </LibraryLoader>
+        )}
+      </AuthProvider>
+    </div>
+  </ThemeProvider>
+);
+
+In this setup, LibraryLoader and, consequently, AnmHome will only render when isLoggedIn is true.
+Next Steps:
+
+    Resolve the 'unreachable code' errors in your service files.
+    Review the use of useContext in App.js. If necessary, move the logic that depends on the context to a child component.
+    If conditional rendering is needed based on isLoggedIn, implement it as shown above.
+    Test the application and observe if AnmHome is rendering as expected when the user logs in.

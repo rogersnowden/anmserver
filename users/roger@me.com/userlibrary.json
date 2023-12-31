@@ -1,0 +1,22 @@
+{
+  "username": "roger@me.com",
+  "lastupdate": "Dec 11, 2023",
+  "librarycontents": 
+  [
+    {"sku": 1,
+    "title": "nursery rhymes",
+    "status": "new",
+    "recordstatus":"unrecorded"
+    },
+    {"sku": 1,
+    "title": "nursery rhymes",
+    "status": "new",
+    "recordstatus":"unrecorded"
+    },
+    {"sku": 1,
+    "title": "nursery rhymes",
+    "status": "new",
+    "recordstatus":"unrecorded"
+    }
+  ]  
+}

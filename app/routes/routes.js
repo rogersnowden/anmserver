@@ -1,15 +1,18 @@
 // routes.js 
 const { authJwt } = require("../middlewares");
 const controller = require("../controllers/auth.controller");
+const prodcontroller = require("../controllers/prod.controller");
 const dbtrans = require("../controllers/dbtrans.controller");
 const auth= require("../middlewares/authJwt");
 var logger = require('log4js').getLogger();
 
 const fs = require('fs');
 
+
 module.exports = function(app) {
 
 logger.debug("in the routes.js file");
+
 
 // test tracing
 //console.trace();
@@ -155,6 +158,35 @@ app.post("/api/pwdset", (req, res) => {
     });
 });
 
+// product related routes
+
+// getLibrary POST
+app.post("/api/getlibrary", async (req, res) => { // Use async here
+  try {
+    await controller.validateSession(req, res); // Make sure to await this
+    const libraryDocument = await prodcontroller.getLibrary(req, res); // Await the result
+    logger.debug("got user lib: " + libraryDocument);
+    res.status(200).json(libraryDocument);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+});
+
+// getBook POST
+app.post("/api/getbook", (req, res) => {
+  controller.validateSession(req, res)
+    .then(user => {
+      return controller.getBook(req, res); // Add the return statement here
+    })
+    .then(bookDocument => {
+      // send success response
+      logger.debug("got prof: " + bookDocument);
+      res.status(200).json(bookDocument);
+    })
+    .catch(error => {
+      res.status(error.status || 500).json({ message: error.message });
+    });
+});
 
 
 

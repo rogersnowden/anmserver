@@ -13,6 +13,9 @@ const dbConfig = require("./app/config/db.config");
 
 const app = express();
 
+// IMPORTANT  base file path for all server code
+global.basePath = __dirname;
+
 // debugging to disk if needed
 const fs = require('fs');
 
@@ -28,6 +31,8 @@ const options = {
 //console.log('server.crt: ' + options.cert);
 
 console.log('PORT: ' + PORT);
+
+console.log("basePath top: " + global.basePath);
 
 //console.log('options: ' + options.key + ' ' + options.cert);
 
