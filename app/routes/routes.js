@@ -1,4 +1,6 @@
 // routes.js 
+const express = require('express'); // Add this line to import express
+const path = require('path');
 const { authJwt } = require("../middlewares");
 const controller = require("../controllers/auth.controller");
 const prodcontroller = require("../controllers/prod.controller");
@@ -171,6 +173,10 @@ app.post("/api/getlibrary", async (req, res) => { // Use async here
     res.status(error.status || 500).json({ message: error.message });
   }
 });
+
+// direct load for thumbnail images
+//app.get("/products/thumbs", express.static(path.join(__dirname, '../..', 'Product', 'thumbs')));
+//logger.debug("routes get thumbs");
 
 // getBook POST
 app.post("/api/getbook", (req, res) => {

@@ -1,5 +1,6 @@
 // server.js rsnowden
 const https = require('https');
+
 console.log('protocol: ' + https.globalAgent.protocol);
 
 const express = require("express");
@@ -10,6 +11,8 @@ const dbConfig = require("./app/config/db.config");
 	console.log(dbConfig.HOST);
 	console.log(dbConfig.PORT);
 	console.log(dbConfig.DB);
+
+const path= require('path');
 
 const app = express();
 
@@ -93,10 +96,17 @@ db.mongoose
   });
 
 // simple get route for testing server instance
-app.get("/", (req, res) => {
-	logger.debug("simple get: " + req.body.username);
-  res.json({ message: "get: Base server is here." });
-});
+//app.get("/", (req, res) => {
+//	logger.debug("simple get: " + req.body.username);
+//  res.json({ message: "get: Base server is here." });
+//});
+
+app.use("/", express.static(path.join(__dirname)));
+
+// direct load for thumbnail images
+app.use("/products/thumbs", express.static(path.join(__dirname, 'products', 'thumbs')));
+logger.debug("routes get thumbs");
+
 
 // simple post route for testing server instance
 app.post("/", (req, res) => {

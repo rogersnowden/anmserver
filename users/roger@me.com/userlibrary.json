@@ -4,16 +4,19 @@
   "librarycontents": 
   [
     {"sku": 1,
+	"coverimage": "000001_000.png",
     "title": "nursery rhymes",
     "status": "new",
     "recordstatus":"unrecorded"
     },
-    {"sku": 1,
+    {"sku": 2,
+	"coverimage": "000002_000.png",
     "title": "spiffy book one",
     "status": "new",
     "recordstatus":"unrecorded"
     },
-    {"sku": 1,
+    {"sku": 3,
+	"coverimage": "000003_000.png",
     "title": "Another Book for You",
     "status": "new",
     "recordstatus":"unrecorded"
