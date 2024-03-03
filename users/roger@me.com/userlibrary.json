@@ -3,21 +3,21 @@
   "lastupdate": "Dec 11, 2023",
   "librarycontents": 
   [
-    {"sku": 1,
+    {"sku": "000001",
 	"coverimage": "000001_000.png",
     "title": "Nursery Rhymes",
 	"description": "A collection of classic nursery rhymes for you and your child's enjoyment. Makes for great bedtime reading!",
     "status": "New",
     "recordstatus":"unrecorded"
     },
-    {"sku": 2,
+    {"sku": "000002",
 	"coverimage": "000002_000.png",
     "title": "Spiffy Book One",
 	"description": "A fine little illustrated tale for all ages.",
     "status": "New",
     "recordstatus":"unrecorded"
     },
-    {"sku": 3,
+    {"sku": "000003",
 	"coverimage": "000003_000.png",
     "title": "Another Book for You",
 	"description": "Yet another cute little story with some great illustrations. Share every night.",

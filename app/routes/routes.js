@@ -174,6 +174,30 @@ app.post("/api/getlibrary", async (req, res) => { // Use async here
   }
 });
 
+// get userBook POST
+app.post("/api/getUserBook", async (req, res) => { // Use async here
+  try {
+    await controller.validateSession(req, res); // Make sure to await this
+    const userBook = await prodcontroller.getUserBook(req, res); // Await the result
+    logger.debug("got user book: " + userBook);
+    res.status(200).json(userBook);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+});
+
+// get userBook images POST
+app.post("/api/getUserBookImages", async (req, res) => { // Use async here
+  try {
+    await controller.validateSession(req, res); // Make sure to await this
+    const userBookImages = await prodcontroller.getUserBookImages(req, res); // Await the result
+    logger.debug("got user book: " + userBookImages);
+    res.status(200).userBookImages;
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+});
+
 // direct load for thumbnail images
 //app.get("/products/thumbs", express.static(path.join(__dirname, '../..', 'Product', 'thumbs')));
 //logger.debug("routes get thumbs");

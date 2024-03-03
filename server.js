@@ -102,10 +102,28 @@ db.mongoose
 //});
 
 app.use("/", express.static(path.join(__dirname)));
+// Serve static files from the 'public' directory
 
+app.use(express.static('public'));
+
+// Dynamic middleware to serve user book images
+app.use('/api/users/:userName/mybooks/:productSKU', (req, res, next) => {
+    const { userName, productSKU } = req.params;
+//    const filePath = path.join(__dirname, 'public', 'books', 'users', userName, 'mybooks', productSKU, req.path);
+    const filePath = path.join(__dirname, 'users', userName, 'mybooks', productSKU, req.path);
+
+    // Use res.sendFile to serve the file if it exists
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            next(); // File not found, move to the next middleware (e.g., 404 handler)
+        }
+    });
+});
 // direct load for thumbnail images
 app.use("/products/thumbs", express.static(path.join(__dirname, 'products', 'thumbs')));
 logger.debug("routes get thumbs");
+
+
 
 
 // simple post route for testing server instance
