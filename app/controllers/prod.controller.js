@@ -74,7 +74,7 @@ exports.getUserBook = async (req, res) => {
   }
 };
 
-// getUserBookImages
+// getUserBookImages return array of all qualfiied images
 exports.getUserBookImages = async (req, res) => {
     logger.debug("basePath: " + global.basePath);
     const userName = req.body.userName;
@@ -103,6 +103,33 @@ logger.debug("here");
     } catch (error) {
         logger.debug("get book images call failed", error);
         res.status(500).send({ message: "Failed to get book images." });
+    }
+};
+
+// return array of all qualified audio files.
+exports.getUserBookAudio = async (req, res) => {
+    const { userName, productSKU } = req.body;
+    const audioDirectory = `${global.basePath}/users/${userName}/mybooks/${productSKU}/`;
+
+    try {
+        const files = await fs.readdir(audioDirectory);
+        const audioFiles = files.filter(file => file.endsWith('.wav'));
+		// Sort files in ascending order by name
+		audioFiles.sort();
+        const audioData = await Promise.all(audioFiles.map(async (file) => {
+            const filePath = path.join(audioDirectory, file);
+            const fileData = await fs.readFile(filePath);
+            return Buffer.from(fileData).toString('base64');
+        }));
+
+        const audioBase64 = audioData.map((data, index) => ({
+            filename: audioFiles[index],
+            data: `data:audio/wav;base64,${data}`
+        }));
+
+        res.json(audioBase64);
+    } catch (error) {
+        res.status(500).send({ message: "Failed to get book audio." });
     }
 };
 

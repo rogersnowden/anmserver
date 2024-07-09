@@ -3,34 +3,100 @@
     "bookcontents": [
         {
             "page": 0,
-            "title": "Cover",
+            "title": "My Nursery Rhymes",
             "image": "000000.png",
-            "text": "Here is page zero. It is a long thing. I am curious to see how text flows in my app. I suppose I need to consider line breaks, hyphenated words and wrapping as well. Let's put this out there and see what happens.\nOh, how do I force a line break? \nLike this, \n\nfor two lines,\n perhaps?",
-            "audio": "page0.mp3",
+            "audio": "page0audio.wav",
+            "audioName": "page0audio.wav",
             "textColor": "white"
         },
         {
             "page": 1,
-            "title": "Baker",
+            "title": "Twinkle Twinkle Little Star",
             "image": "000001.png",
-            "text": "Here is page one. It is a long thing. I am curious to see how text flows in my app. I suppose I need to consider line breaks, hyphenated words and wrapping as well. Let's put this out there and see what happens.\nOh, how do I force a line break? \nLike this, \n\nfor two lines,\n perhaps?",
-            "audio": "page1.mp3",
+            "text": "Twinkle, twinkle, little star,\nHow I wonder what you are!\nUp above the world so high,\nLike a diamond in the sky.",
+            "audio": "page1audio.wav",
+            "audioName": "page1audio.wav",
             "textColor": "black"
         },
         {
             "page": 2,
-            "title": "Charlie",
+            "title": "Star Light Start Bright",
             "image": "000002.png",
-            "text": "And then we have page two. Also pretty short.",
-            "audio": "page2.mp3",
+            "text": "Star light, star bright,\nFirst star I see tonight\nI wish I may, I wish I might,\nHave the wish I wish tonight",
+            "audioName": "page2audio.wav",
             "textColor": "white"
         },
         {
             "page": 3,
-            "title": "Delta",
+            "title": "Jack and Jill",
             "image": "000003.png",
-            "text": "And then we have page three.\n\nThe end.",
-            "audio": "page3.mp3",
+            "text": "Jack and Jill\nWent up the hill\nTo fetch a pail of water\nJack fell down and broke his crown\nAnd Jill came tumbling after",
+            "audioName": "page3audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 4,
+            "title": "Baa Baa Black Sheep",
+            "image": "000004.png",
+            "text": "Baa, baa, black sheep,\nHave you any wool?\nYes, sir, yes, sir,\nThree bags full\nOne for the master,\nAnd one for the dame,\nAnd one for the little boy\nWho lives down the lane.",
+            "audio": "page4audio.wav",
+            "audioName": "page4audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 5,
+            "title": "Little Bo Peep",
+            "image": "000005.png",
+            "text": "Little Bo-Peep has lost her sheep,\nand doesn't know where to find them.\nLeave them alone, and\nthey'll come home,\nwagging their tails behind them.",
+            "audioName": "page5audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 6,
+            "title": "Little Miss Muffet",
+            "image": "000006.png",
+            "text": "Little miss Muffet she sat on her tuffet,\neating her curds eating and whey.\nAlong came a spider\nwho sat down beside her\nAnd frightened miss Muffet away.",
+            "audioName": "page6audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 7,
+            "title": "Hey Diddle Diddle",
+            "image": "000007.png",
+            "text": "Hey diddle diddle,\nThe cat and the fiddle,\nThe cow jumped over the moon.\nThe little dog laughed\nTo see such craft,\nAnd the dish ran away with the spoon.",
+            "audioName": "page7audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 8,
+            "title": "Itsy Bitsy Spider",
+            "image": "000008.png",
+            "text": "The itsy bitsy spider climbed up the waterspout.\nDown came the rain\nand washed the spider out.\nOut came the sun\nand dried up all the rain\nand the itsy bitsy spider\nclimbed up the spout again.",
+            "audioName": "page8audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 9,
+            "title": "Lavender's Blue",
+            "image": "000009.png",
+            "text": "Lavender's blue, dilly, dilly,\nLavendar's green,\nWhen I am king, dilly, dilly,\nYou shall be queen.",
+            "audioName": "page9audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 10,
+            "title": "Little Jack Horner",
+            "image": "000010.png",
+            "text": "Little Jack Horner Sat in the corner,\nEating a Christmas pie.\nHe put in his thumb, And pulled out a plum,\nAnd said, What a good boy am I!",
+            "audioName": "page10audio.wav",
+            "textColor": "black"
+        },
+        {
+            "page": 11,
+            "title": "Peter Peter, Pumpkin Eater",
+            "image": "000011.png",
+            "text": "Peter, Peter, pumpkin eater,\nHad a wife and couldn’t keep her\nHe put her in a pumpkin shell,\nAnd then he kept her very well\nPeter, Peter, pumpkin eater,\nHad another, and didn’t love her\nPeter learned to read and spell,\nAnd then he loved her very well",
+            "audioName": "page11audio.wav",
             "textColor": "black"
         }
     ]

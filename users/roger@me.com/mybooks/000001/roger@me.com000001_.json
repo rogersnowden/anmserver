@@ -1,0 +1,192 @@
+{
+    "sku": "000001",
+    "bookcontents": [
+        {
+            "page": 0,
+            "title": "My Nursery Rhymes",
+            "image": "000000.png",
+            "audio": "",
+            "textColor": "white"
+        },
+        {
+            "page": 1,
+            "title": "Twinkle Twinkle Little Star",
+            "image": "000001.png",
+            "text": "	Twinkle, twinkle, little star,
+	How I wonder what you are!
+	Up above the world so high,
+	Like a diamond in the sky.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 2,
+            "title": "Star Light Start Bright",
+            "image": "000002.png",
+            "text": "    Star light, star bright,
+    First star I see tonight;
+    I wish I may, I wish I might,
+    Have the wish I wish tonight",
+            "audio": "",
+            "textColor": "white"
+        },
+        {
+            "page": 3,
+            "title": "Jack and Jill",
+            "image": "000003.png",
+            "text": "	Jack and Jill
+	Went up the hill
+	To fetch a pail of water
+	Jack fell down and broke his crown
+	And Jill came tumbling after",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 4,
+            "title": "Baa Baa Black Sheep",
+            "image": "000004.png",
+            "text": "	Baa, baa, black sheep,
+	Have you any wool?
+	Yes, sir, yes, sir,
+	Three bags full;
+	One for the master,
+	And one for the dame,
+	And one for the little boy
+	Who lives down the lane.
+",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 5,
+            "title": "Little Bo Peep",
+            "image": "000005.png",
+            "text": "    Little Bo-Peep has lost her sheep,
+    and doesn't know where to find them.
+    Leave them alone, and they'll come home,
+    wagging their tails behind them.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 6,
+            "title": "Little Miss Muffet",
+            "image": "000006.png",
+            "text": "	Little miss Muffet she sat on her tuffet, 
+	eating her curds eating and whey.
+	Along came a spider who sat down beside her
+	And frightened miss Muffet away.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 7,
+            "title": "Hey Diddle Diddle",
+            "image": "000007.png",
+            "text": "	Hey diddle diddle,
+	The cat and the fiddle,
+	The cow jumped over the moon;
+	The little dog laughed
+	To see such craft,
+	And the dish ran away with the spoon.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 8,
+            "title": "Itsy Bitsy Spider",
+            "image": "000008.png",
+            "text": "	The itsy bitsy spider climbed up the waterspout.
+	Down came the rain
+	and washed the spider out.
+	Out came the sun
+	and dried up all the rain
+	and the itsy bitsy spider
+	climbed up the spout again.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 9,
+            "title": "Lavender's Blue",
+            "image": "000009.png",
+            "text": "	Lavender's blue, dilly, dilly,
+	Lavendar's green,
+	When I am king, dilly, dilly,
+	You shall be queen.",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 10,
+            "title": "Little Jack Horner",
+            "image": "000010.png",
+            "text": "	Little Jack Horner Sat in the corner, 
+	Eating a Christmas pie.
+	He put in his thumb, And pulled out a plum, 
+	And said, \What a good boy am I!\",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 11,
+            "title": "Peter Peter, Pumpkin Eater",
+            "image": "000011.png",
+            "text": "	Peter, Peter, pumpkin eater,
+	Had a wife and couldn’t keep her;
+	He put her in a pumpkin shell,
+	And then he kept her very well.
+	Peter, Peter, pumpkin eater,
+	Had another, and didn’t love her;
+	Peter learned to read and spell,
+	And then he loved her very well",
+            "audio": "",
+            "textColor": "black"
+        },
+        {
+            "page": 12,
+            "title": "One, Two, Three, Four, Five",
+            "image": "000012.png",
+            "text": "	One two three four five
+	Once I caught a fish alive,
+	Six seven eight nine ten
+	Then I let him go again!
+
+	Why did you let him go?
+	Because he bit my finger so!
+	Which finger did he bite?
+	This little finger on my right!",
+            "audio": "",
+            "textColor": "black"
+        },
+		{
+            "page": 13,
+            "title": "The Muffin Man",
+            "image": "000013.png",
+            "text": "	Do you know the muffin man,
+	the muffin man, the muffin man?
+	Do you know the muffin man,
+	Who lives on Drury Lane?
+
+	Yes, I know the muffin man,
+	The muffin man, the muffin man.
+	Yes, I know the muffin man,
+	who lives on Drury Lane.",
+            "audio": "",
+            "textColor": "black"
+        },
+		{
+            "page": 14,
+            "title": "This Little Piggy",
+            "image": "000014.png",
+            "text": "	This little piggy went to market,
+	This little piggy stayed home,
+	This little piggy had roast beef,
+	This little piggy had none,
+	And this little piggy cried \wee wee wee\ all the way home.",
+            "audio": "",
+            "textColor": "black"
+        },
+    ]
+}

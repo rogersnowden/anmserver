@@ -18,9 +18,9 @@ const app = express();
 
 // IMPORTANT  base file path for all server code
 global.basePath = __dirname;
-
+console.log(" srv base; " + global.basePath); 
 // debugging to disk if needed
-const fs = require('fs');
+const fs = require('fs-extra');
 
 // set port, listen for requests
 const PORT = process.env.PORT || 4000;
@@ -72,6 +72,7 @@ app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+app.use(express.raw({ type: 'application/octet-stream', limit: '10mb' }));
 
 const db = require("./app/models");
 const Role = db.role;
