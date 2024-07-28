@@ -1,5 +1,3 @@
-// anm server routes.js
-
 const express = require('express');
 const path = require('path');
 const { authJwt } = require("../middlewares");
@@ -7,37 +5,32 @@ const controller = require("../controllers/auth.controller");
 const prodcontroller = require("../controllers/prod.controller");
 const dbtrans = require("../controllers/dbtrans.controller");
 const auth = require("../middlewares/authJwt");
-var logger = require('log4js').getLogger();
+const logger = require('log4js').getLogger();
 const fs = require('fs-extra');
 const multer = require('multer');
+const bodyParser = require('body-parser');
+
+const app = express();
+
+// Middleware to parse JSON and urlencoded data
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Define storage configuration for multer
 const storage = multer.diskStorage({
   destination: async function (req, file, cb) {
-    const userName = req.body.userName;
-    const productSKU = req.body.productSKU;
-    const uploadPath = path.join(global.basePath, 'users', userName, 'mybooks', productSKU);
-    console.log("upload path: " + uploadPath);
-
-    // Ensure the directory exists
-    try {
-      await fs.ensureDir(uploadPath);
-      cb(null, uploadPath);
-    } catch (err) {
-      cb(err);
-    }
+    console.log('Destination function called');
+    cb(null, '/tmp'); // Save to a temporary directory first
   },
   filename: function (req, file, cb) {
-    const pageIndex = req.body.pageIndex;
-    const filename = `page${pageIndex}audio.wav`; // Construct the filename using pageIndex
-    cb(null, filename);
+    console.log('Filename function called');
+    cb(null, file.originalname);
   }
 });
 
 const upload = multer({ storage: storage });
 
 module.exports = function (app) {
-
   logger.debug("in the routes.js file");
 
   function errorHandler(err, req, res, next) {
@@ -64,10 +57,10 @@ module.exports = function (app) {
   app.get('/', (req, res) => {
     logger.debug("empty get req");
     if (req.session.loggedIn)
-      logger.debug("empty get req, logged in")
+      logger.debug("empty get req, logged in");
     else {
     }
-    res.redirect('testlogin.html', './')
+    res.redirect('testlogin.html', './');
   });
 
   app.post("/api/login", (req, res) => {
@@ -224,29 +217,38 @@ module.exports = function (app) {
       });
   });
 
+  // Middleware to handle multipart/form-data (file upload)
+  const multipartMiddleware = upload.single('audioFile');
+
   // Route to handle single audio file upload
-app.post('/api/saveAudioFile', async (req, res) => {
-  const { userName, productSKU, currentPageIndex } = req.query;
-  const audioBlob = req.body;
+  app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
+    console.log('Request Body:', req.body);
+    console.log('Request File:', req.file);
 
-  if (!audioBlob || !userName || !productSKU || !currentPageIndex) {
-    return res.status(400).json({ message: 'Missing required parameters' });
-  }
+    const { userName, productSKU, currentPageIndex } = req.body;
+    const audioPath = req.file.path;
+    console.log('save audio audioPath: ' + audioPath);
 
-  const uploadPath = path.join(global.basePath, 'users', userName, 'mybooks', productSKU);
-  const filename = `page${currentPageIndex}audio.wav`;
-  const filePath = path.join(uploadPath, filename);
+    if (!audioPath || !userName || !productSKU || !currentPageIndex) {
+      return res.status(400).json({ message: 'Missing required parameters' });
+    }
 
-  try {
-    await fs.ensureDir(uploadPath);
-    await fs.writeFile(filePath, audioBlob);
-    console.log(`Received file ${filename} from ${userName} for product ${productSKU} at page ${currentPageIndex}`);
-    res.status(200).json({ message: 'File uploaded successfully', file: filename });
-  } catch (error) {
-    console.error('Error saving file', error);
-    res.status(500).json({ message: 'Error saving file', error: error.message });
-  }
-});
+    const uploadPath = path.join(global.basePath || '/default/base/path', 'users', userName, 'mybooks', productSKU);
+    const filename = `page${currentPageIndex}audio.webm`;
+    const filePath = path.join(uploadPath, filename);
+    console.log('save audio file path: ' + filePath);
+
+    try {
+      await fs.ensureDir(uploadPath);
+      await fs.move(audioPath, filePath);
+      console.log(`Received file ${filename} from ${userName} for product ${productSKU} at page ${currentPageIndex}`);
+      res.status(200).json({ message: 'File uploaded successfully', file: filename });
+    } catch (error) {
+      console.error('Error saving file', error);
+      res.status(500).json({ message: 'Error saving file', error: error.message });
+    }
+  });
+
   // errorHandler for all cases, function errorHandler defined above
   app.use(errorHandler);
 };
