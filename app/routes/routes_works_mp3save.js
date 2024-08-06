@@ -222,82 +222,55 @@ module.exports = function (app) {
   const multipartMiddleware = upload.single('audioFile');
 
   // Route to handle single audio file upload
-app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
-  console.log('Request Body:', req.body);
-  console.log('Request File:', req.file);
+  app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
+    console.log('Request Body:', req.body);
+    console.log('Request File:', req.file);
 
-  const { userName, productSKU, currentPageIndex } = req.body;
-  const audioPath = req.file.path;
-  console.log('save audio audioPath: ' + audioPath);
+    const { userName, productSKU, currentPageIndex } = req.body;
+    const audioPath = req.file.path;
+    console.log('save audio audioPath: ' + audioPath);
 
-  if (!audioPath || !userName || !productSKU || !currentPageIndex) {
-    return res.status(400).json({ message: 'Missing required parameters' });
-  }
+    if (!audioPath || !userName || !productSKU || !currentPageIndex) {
+      return res.status(400).json({ message: 'Missing required parameters' });
+    }
 
-  const uploadPath = path.join(global.basePath || '/default/base/path', 'users', userName, 'mybooks', productSKU);
-  const filename = `page${currentPageIndex}audio.webm`;
-  const filePath = path.join(uploadPath, filename);
-  console.log('save audio file path: ' + filePath);
+    const uploadPath = path.join(global.basePath || '/default/base/path', 'users', userName, 'mybooks', productSKU);
+    const filename = `page${currentPageIndex}audio.webm`;
+    const filePath = path.join(uploadPath, filename);
+    console.log('save audio file path: ' + filePath);
 
-  try {
-    await fs.ensureDir(uploadPath);
-    await fs.move(audioPath, filePath, { overwrite: true });
-    console.log(`Received file ${filename} from ${userName} for product ${productSKU} at page ${currentPageIndex}`);
+    try {
+      await fs.ensureDir(uploadPath);
+      await fs.move(audioPath, filePath, { overwrite: true});
+      console.log(`Received file ${filename} from ${userName} for product ${productSKU} at page ${currentPageIndex}`);
+      // Convert to MP3
+      const mp3Filename = `page${currentPageIndex}audio.mp3`;
+      const mp3FilePath = path.join(uploadPath, mp3Filename);
+      
+ffmpeg(filePath)
+  .outputOptions([
+    // Remove silence from the start and end
+    '-af',	'silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75'
+  ])
+  .toFormat('mp3')
+  .on('start', (cmd) => {
+    console.log('FFmpeg process started:', cmd);
+  })
+  .on('end', () => {
+    console.log(`Converted ${filename} to MP3 format at ${mp3FilePath}`);
+    res.status(200).json({ message: 'File uploaded and converted to MP3 successfully', file: mp3Filename });
+  })
+  .on('error', (error) => {
+    console.error('Error converting file to MP3', error);
+    res.status(500).json({ message: 'Error converting file to MP3', error: error.message });
+  })
+  .save(mp3FilePath);
 
-    // Convert to MP3 and analyze silence
-    const mp3Filename = `page${currentPageIndex}audio.mp3`;
-    const mp3FilePath = path.join(uploadPath, mp3Filename);
-
-    ffmpeg(filePath)
-      .toFormat('mp3')
-      .on('end', async () => {
-        console.log(`Converted ${filename} to MP3 format at ${mp3FilePath}`);
-        
-        // Analyze for silence and trim accordingly
-        ffmpeg(mp3FilePath)
-          .outputOptions(['-af', 'silencedetect=noise=-25dB:d=0.5'])
-          .on('end', (stdout, stderr) => {
-            // Extract silence end time from stderr
-            const silenceMatch = stderr.match(/silence_end: ([0-9.]+)/);
-            if (silenceMatch) {
-              let silenceEnd = parseFloat(silenceMatch[1]);
-              silenceEnd = Math.max(silenceEnd - 0.1, 0); // Reduce silence by 0.1 seconds
-              console.log(`Detected silence end at: ${silenceEnd}s`);
-
-              // Trim silence from the beginning and save output
-              ffmpeg(mp3FilePath)
-                .outputOptions([`-ss ${silenceEnd}`, '-c copy'])
-                .on('end', () => {
-                  console.log(`Trimmed silence from ${mp3FilePath}`);
-                  res.status(200).json({ message: 'File uploaded and processed successfully', file: mp3Filename });
-                })
-                .on('error', (error) => {
-                  console.error('Error trimming silence', error);
-                  res.status(500).json({ message: 'Error trimming silence', error: error.message });
-                })
-                .save(mp3FilePath); // Overwrite original file
-            } else {
-              console.error('Silence not detected correctly');
-              res.status(500).json({ message: 'Error detecting silence' });
-            }
-          })
-          .on('error', (error) => {
-            console.error('Error analyzing silence', error);
-            res.status(500).json({ message: 'Error analyzing silence', error: error.message });
-          })
-          .run(); 
-      })
-      .on('error', (error) => {
-        console.error('Error converting file to MP3', error);
-        res.status(500).json({ message: 'Error converting file to MP3', error: error.message });
-      })
-      .save(mp3FilePath);
-  } catch (error) {
-    console.error('Error saving file', error);
-    res.status(500).json({ message: 'Error saving file', error: error.message });
-  }
-});
-
+      } catch (error) {
+      console.error('Error saving file', error);
+      res.status(500).json({ message: 'Error saving file', error: error.message });
+    }
+  });
 
   // errorHandler for all cases, function errorHandler defined above
   app.use(errorHandler);

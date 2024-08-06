@@ -1,0 +1,50 @@
+remove silence from begin, adjusted -50 db down to -25
+
+ffmpeg -i input.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-50dB:detection=peak,areverse" output.mp3
+
+same for end of file
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse" testb25.mp3
+
+introduce padded silence
+
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75" testc25.mp3
+
+afade added to ease effect on end
+
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75,afade=t=out:st=0:d=0.1" testd25.mp3
+
+
+afade mod:
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,afade=t=out:st=0:d=0.5,areverse,adelay=750|750,apad=pad_dur=0.75" teste25.mp3
+
+fade mod to apply effects in better order:
+
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,afade=t=out:st=0:d=0.1,adelay=750|750,apad=pad_dur=0.75" testf25.mp3
+
+tweak silence remove and fade out for cleaner, less abrupt end of speech
+
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-30dB:detection=peak,areverse,afade=t=out:st=0:d=0.2,adelay=750|750,apad=pad_dur=0.75" testg25.mp3
+
+settled on 'c' for now. no fade,just remove silence and padded begin/end :
+
+ffmpeg -y -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75" testk25.mp3
+
+
+try again, to improve:
+
+ffmpeg -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,afade=t=out:st=0:d=0.2,adelay=750|750,apad=pad_dur=0.75" testh25.mp3
+
+nope, no good. stick with 'c':
+
+add in compression:
+
+ffmpeg -y -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75,acompressor=threshold=-18dB:ratio=3:attack=20:release=250:level_in=3dB:level_out=3dB,acompressor=threshold=-20dB:ratio=4:attack=10:release=100:level_in=4dB:level_out=2dB,acompressor=threshold=-22dB:ratio=5:attack=5:release=50:level_in=5dB:level_out=1dB" testl25.mp3
+
+without the bug:
+
+ffmpeg -y -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75,acompressor=threshold=-18dB:ratio=3:attack=20:release=250:makeup=3dB,acompressor=threshold=-20dB:ratio=4:attack=10:release=100:makeup=3dB,acompressor=threshold=-22dB:ratio=5:attack=5:release=50:makeup=3dB" testl25.mp3
+
+with volume added. Meh.
+
+ffmpeg -y -i test.mp3 -af "silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,silenceremove=start_periods=1:start_threshold=-25dB:detection=peak,areverse,adelay=750|750,apad=pad_dur=0.75,acompressor=threshold=-18dB:ratio=3:attack=20:release=250:makeup=3dB,acompressor=threshold=-20dB:ratio=4:attack=10:release=100:makeup=3dB,acompressor=threshold=-22dB:ratio=5:attack=5:release=50:makeup=3dB,volume=5dB" testm25.mp3
+
