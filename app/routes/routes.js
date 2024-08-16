@@ -285,57 +285,106 @@ app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
         .save(finalFilePath);
     });
 
-    // Detect silence
-    let silenceEnd = 0;
-    const detectSilenceCommand = ffmpeg(finalFilePath)
-      .audioFilters('silencedetect=noise=-25dB:d=0.5')
+    // Detect silence at the beginning
+    let silenceStartEnd = 0;
+    let silenceStartDetected = false;
+    const detectSilenceStartCommand = ffmpeg(finalFilePath)
+      .audioFilters('silencedetect=noise=-25dB:d=0.01')
       .on('stderr', (stderrLine) => {
-        console.log(stderrLine); // Log stderr to see the output
+        console.log(stderrLine);
         const silenceEndMatch = stderrLine.match(/silence_end: ([0-9.]+)/);
-        if (silenceEndMatch) {
-          silenceEnd = parseFloat(silenceEndMatch[1]);
+        if (silenceEndMatch && !silenceStartDetected) {
+          silenceStartEnd = parseFloat(silenceEndMatch[1]);
+          silenceStartDetected = true;
+          console.log(`Initial silence detected, ending at: ${silenceStartEnd}s`);
+          detectSilenceStartCommand.kill('SIGTERM'); // Graceful termination
         }
       })
       .outputOptions('-f null')
-      .output('-') // Use '-' to discard the output
-      .on('end', () => {
-        if (silenceEnd > 0) {
-          silenceEnd = Math.max(silenceEnd - 0.1, 0); // Adjust the silence end time
-        } else {
-          // If no silence detected, set silenceEnd to 0
-          silenceEnd = 0;
+      .output('-')
+      .on('error', (error) => {
+        console.error('Error detecting initial silence', error.message);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: 'Error detecting initial silence', error: error.message });
         }
-        console.log(`Detected silence end at: ${silenceEnd}s`);
+      });
 
-        // Trim silence and convert to MP3
-        const trimmedFilePath = path.join(uploadPath, `trimmed_${finalFilename}`);
+    await new Promise((resolve, reject) => {
+      detectSilenceStartCommand.on('end', resolve).on('error', reject).run();
+    });
+
+    // Detect silence at the end
+    let silenceEndStart = 0;
+    let silenceEndDetected = false;
+    const detectSilenceEndCommand = ffmpeg(finalFilePath)
+      .audioFilters('silencedetect=noise=-25dB:d=0.01')
+      .on('stderr', (stderrLine) => {
+        console.log(stderrLine);
+        const silenceStartMatch = stderrLine.match(/silence_start: ([0-9.]+)/);
+        if (silenceStartMatch) {
+          silenceEndStart = parseFloat(silenceStartMatch[1]);
+          silenceEndDetected = true;
+          console.log(`Final silence detected, starting at: ${silenceEndStart}s`);
+        }
+      })
+      .outputOptions('-f null')
+      .output('-')
+      .on('error', (error) => {
+        console.error('Error detecting final silence', error.message);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: 'Error detecting final silence', error: error.message });
+        }
+      });
+
+    await new Promise((resolve, reject) => {
+      detectSilenceEndCommand.on('end', resolve).on('error', reject).run();
+    });
+
+    // Determine whether trimming is possible
+    if (silenceStartEnd < silenceEndStart) {
+      // Trim silence from start and end
+      const trimmedFilePath = path.join(uploadPath, `trimmed_${finalFilename}`);
+      const endOffset = silenceEndDetected ? silenceEndStart.toFixed(2) : '';
+
+      await new Promise((resolve, reject) => {
         ffmpeg(finalFilePath)
-          .outputOptions([`-ss ${silenceEnd.toFixed(2)}`, '-c copy'])
+          .outputOptions([
+            `-ss ${silenceStartEnd.toFixed(2)}`,
+            endOffset ? `-to ${endOffset}` : '',
+            '-c copy'
+          ])
           .on('start', (cmd) => {
             console.log('FFmpeg process started:', cmd);
           })
           .on('end', async () => {
-            console.log(`Converted and trimmed ${finalFilename} to ${trimmedFilePath}`);
-            await fs.move(trimmedFilePath, finalFilePath, { overwrite: true }); // Overwrite the original file with the trimmed file
-            res.status(200).json({ message: 'File uploaded and converted to MP3 successfully', file: finalFilename });
+            console.log(`Trimmed ${finalFilename} from start ${silenceStartEnd}s and end ${silenceEndStart}s to ${trimmedFilePath}`);
+            await fs.move(trimmedFilePath, finalFilePath, { overwrite: true });
+            if (!res.headersSent) {
+              res.status(200).json({ message: 'File uploaded, converted, and trimmed successfully', file: finalFilename });
+            }
           })
           .on('error', (error, stdout, stderr) => {
-            console.error('Error converting file to MP3', error.message);
+            console.error('Error trimming file', error.message);
             console.error('FFmpeg stdout:', stdout);
             console.error('FFmpeg stderr:', stderr);
-            res.status(500).json({ message: 'Error converting file to MP3', error: error.message });
+            if (!res.headersSent) {
+              return res.status(500).json({ message: 'Error trimming file', error: error.message });
+            }
+            reject(new Error('Error trimming file'));
           })
           .save(trimmedFilePath);
-      })
-      .on('error', (error) => {
-        console.error('Error detecting silence', error.message);
-        res.status(500).json({ message: 'Error detecting silence', error: error.message });
       });
-
-    detectSilenceCommand.run(); // Start the silence detection
+    } else {
+      console.log('Skipping trimming due to invalid silence range');
+      if (!res.headersSent) {
+        res.status(200).json({ message: 'File uploaded and converted successfully without trimming', file: finalFilename });
+      }
+    }
   } catch (error) {
     console.error('Error saving file', error.message);
-    res.status(500).json({ message: 'Error saving file', error: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Error saving file', error: error.message });
+    }
   }
 });
 
