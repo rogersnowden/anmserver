@@ -263,6 +263,9 @@ app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
   const debugFilePath = path.join(debugDirPath, `debug_${tempFilename}`);
   const finalFilename = `page${currentPageIndex}audio.mp3`;
   const finalFilePath = path.join(uploadPath, finalFilename);
+
+  const silenceFilePath = path.join(global.basePath, '/assets/silence_0.25s.mp3'); // Reference to the pre-generated silence file
+
   console.log('save audio file path: ' + finalFilePath);
 
   try {
@@ -285,93 +288,80 @@ app.post('/api/saveAudioFile', multipartMiddleware, async (req, res) => {
         .save(finalFilePath);
     });
 
-    // Detect silence at the beginning
-    let silenceStartEnd = 0;
-    let silenceStartDetected = false;
-    const detectSilenceStartCommand = ffmpeg(finalFilePath)
-      .audioFilters('silencedetect=noise=-25dB:d=0.01')
-      .on('stderr', (stderrLine) => {
-        console.log(stderrLine);
-        const silenceEndMatch = stderrLine.match(/silence_end: ([0-9.]+)/);
-        if (silenceEndMatch && !silenceStartDetected) {
-          silenceStartEnd = parseFloat(silenceEndMatch[1]);
-          silenceStartDetected = true;
-          console.log(`Initial silence detected, ending at: ${silenceStartEnd}s`);
-          detectSilenceStartCommand.kill('SIGTERM'); // Graceful termination
-        }
-      })
-      .outputOptions('-f null')
-      .output('-')
-      .on('error', (error) => {
-        console.error('Error detecting initial silence', error.message);
-        if (!res.headersSent) {
-          return res.status(500).json({ message: 'Error detecting initial silence', error: error.message });
-        }
-      });
+    // Detect initial and final silence
+    let initialSilenceEnd = null;
+    let finalSilenceStart = null;
 
     await new Promise((resolve, reject) => {
-      detectSilenceStartCommand.on('end', resolve).on('error', reject).run();
+      ffmpeg(finalFilePath)
+        .audioFilters('silencedetect=noise=-25dB:d=0.01')
+        .on('stderr', (stderrLine) => {
+          console.log(stderrLine);
+          const silenceEndMatch = stderrLine.match(/silence_end: ([0-9.]+)/);
+          const silenceStartMatch = stderrLine.match(/silence_start: ([0-9.]+)/);
+
+          if (silenceEndMatch && initialSilenceEnd === null) {
+            initialSilenceEnd = parseFloat(silenceEndMatch[1]);
+            console.log(`Initial silence detected, ending at: ${initialSilenceEnd}s`);
+          }
+
+          if (silenceStartMatch) {
+            finalSilenceStart = parseFloat(silenceStartMatch[1]);
+            console.log(`Final silence detected, starting at: ${finalSilenceStart}s`);
+          }
+        })
+        .on('end', resolve)
+        .on('error', (error) => {
+          console.error('Error detecting silence', error.message);
+          reject(error);
+        })
+        .outputOptions('-f null')
+        .output('-')
+        .run();
     });
 
-    // Detect silence at the end
-    let silenceEndStart = 0;
-    let silenceEndDetected = false;
-    const detectSilenceEndCommand = ffmpeg(finalFilePath)
-      .audioFilters('silencedetect=noise=-25dB:d=0.01')
-      .on('stderr', (stderrLine) => {
-        console.log(stderrLine);
-        const silenceStartMatch = stderrLine.match(/silence_start: ([0-9.]+)/);
-        if (silenceStartMatch) {
-          silenceEndStart = parseFloat(silenceStartMatch[1]);
-          silenceEndDetected = true;
-          console.log(`Final silence detected, starting at: ${silenceEndStart}s`);
-        }
-      })
-      .outputOptions('-f null')
-      .output('-')
-      .on('error', (error) => {
-        console.error('Error detecting final silence', error.message);
-        if (!res.headersSent) {
-          return res.status(500).json({ message: 'Error detecting final silence', error: error.message });
-        }
-      });
-
-    await new Promise((resolve, reject) => {
-      detectSilenceEndCommand.on('end', resolve).on('error', reject).run();
-    });
-
-    // Determine whether trimming is possible
-    if (silenceStartEnd < silenceEndStart) {
+    // Ensure valid silence range
+    if (initialSilenceEnd !== null && finalSilenceStart !== null && initialSilenceEnd < finalSilenceStart) {
       // Trim silence from start and end
       const trimmedFilePath = path.join(uploadPath, `trimmed_${finalFilename}`);
-      const endOffset = silenceEndDetected ? silenceEndStart.toFixed(2) : '';
 
       await new Promise((resolve, reject) => {
         ffmpeg(finalFilePath)
           .outputOptions([
-            `-ss ${silenceStartEnd.toFixed(2)}`,
-            endOffset ? `-to ${endOffset}` : '',
+            `-ss ${initialSilenceEnd.toFixed(2)}`,
+            `-to ${finalSilenceStart.toFixed(2)}`,
             '-c copy'
           ])
           .on('start', (cmd) => {
             console.log('FFmpeg process started:', cmd);
           })
           .on('end', async () => {
-            console.log(`Trimmed ${finalFilename} from start ${silenceStartEnd}s and end ${silenceEndStart}s to ${trimmedFilePath}`);
-            await fs.move(trimmedFilePath, finalFilePath, { overwrite: true });
-            if (!res.headersSent) {
-              res.status(200).json({ message: 'File uploaded, converted, and trimmed successfully', file: finalFilename });
-            }
+            console.log(`Trimmed ${finalFilename} from start ${initialSilenceEnd}s to end ${finalSilenceStart}s at ${trimmedFilePath}`);
+
+            // Concatenate silence at the beginning and end
+            const finalWithSilenceFilePath = path.join(uploadPath, `final_${finalFilename}`);
+            await new Promise((resolve, reject) => {
+              ffmpeg()
+                .input(silenceFilePath)
+                .input(trimmedFilePath)
+                .input(silenceFilePath)
+                .complexFilter('[0][1][2]concat=n=3:v=0:a=1[a]')
+                .outputOptions('-map [a]')
+                .on('end', async () => {
+                  console.log(`Added silence to ${finalFilename}`);
+                  await fs.move(finalWithSilenceFilePath, finalFilePath, { overwrite: true });
+                  if (!res.headersSent) {
+                    res.status(200).json({ message: 'File uploaded, trimmed, and silence added successfully', file: finalFilename });
+                  }
+                })
+                .on('error', (error) => {
+                  console.error('Error adding silence', error.message);
+                  reject(error);
+                })
+                .save(finalWithSilenceFilePath);
+            });
           })
-          .on('error', (error, stdout, stderr) => {
-            console.error('Error trimming file', error.message);
-            console.error('FFmpeg stdout:', stdout);
-            console.error('FFmpeg stderr:', stderr);
-            if (!res.headersSent) {
-              return res.status(500).json({ message: 'Error trimming file', error: error.message });
-            }
-            reject(new Error('Error trimming file'));
-          })
+          .on('error', reject)
           .save(trimmedFilePath);
       });
     } else {
